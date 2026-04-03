@@ -58,7 +58,6 @@
             text-transform: uppercase;
         }
 
-        /* Justerad storlek för att passa skärmen bättre */
         .node {
             width: 38px;
             height: 38px;
@@ -222,6 +221,7 @@
     </div>
 
     <script>
+        // Uppdaterad med din specifika webhook-URL
         const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1489554981324324894/Nr2LuaDGJSLAu6YaQJ81AzR_pdqzxHa6PgnmSDQtKFqXGyk3c00YDX6fAn2klgyBiNtk";
         
         let startTime, timerInterval;
@@ -246,7 +246,6 @@
             const views = ['view-start', 'view-level-1', 'view-level-2', 'view-level-3', 'view-level-4', 'view-level-5', 'view-level-6', 'view-final'];
             views.forEach(v => document.getElementById(v).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
-            // Scroll to top of content
             document.getElementById('content').scrollTop = 0;
         }
 
@@ -268,7 +267,9 @@
         }
         function moveL1() {
             const marker = document.getElementById('l1-marker');
-            l1MarkerPos += (2.5 + l1Hits) * l1Direction;
+            // Justerad hastighet: Ökar med 0.5 för varje träff
+            const speed = 0.8 + (l1Hits * 0.5); 
+            l1MarkerPos += speed * l1Direction;
             if(l1MarkerPos >= 100 || l1MarkerPos <= 0) l1Direction *= -1;
             marker.style.left = l1MarkerPos + "%";
             l1Animation = requestAnimationFrame(moveL1);
@@ -278,7 +279,7 @@
             const left = parseFloat(zone.style.left), width = parseFloat(zone.style.width);
             if(l1MarkerPos >= left && l1MarkerPos <= (left + width)) {
                 l1Hits++;
-                log(`Packet sync ${l1Hits}/3`);
+                log(`Packet sync ${l1Hits}/3 - Speed increased`);
                 document.getElementById('l1-hits').innerText = "OK ".repeat(l1Hits) + "- ".repeat(3-l1Hits);
                 zone.style.left = Math.floor(Math.random() * 80) + "%";
                 if(l1Hits >= 3) {
@@ -286,7 +287,7 @@
                     setTimeout(initLevel2, 600);
                 }
             } else {
-                log("SYNC_ERR: Resetting...");
+                log("SYNC_ERR: Resetting velocity...");
                 l1Hits = 0;
                 document.getElementById('l1-hits').innerText = "---";
             }
@@ -461,20 +462,29 @@
             const btn = document.getElementById('discord-btn');
             const status = document.getElementById('status-msg');
             btn.disabled = true;
-            status.innerText = "UPLOADING...";
+            status.innerText = "SÄNDER RAPPORT...";
             try {
                 const r = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        username: "HACKER_HQ",
-                        content: `🚨 **BREACH REPORT** 🚨\nAgent: \`${name}\`\nTime: \`${time}\`\nStatus: \`SUCCESS\``
+                        username: "HACKER_HQ_BOT",
+                        embeds: [{
+                            title: "🚨 SYSTEMBREACH DETEKTERAD 🚨",
+                            color: 65281,
+                            fields: [
+                                { name: "Agent ID", value: `\`${name}\``, inline: true },
+                                { name: "Sluttid", value: `\`${time}\``, inline: true },
+                                { name: "Säkerhetsnivå", value: "Level 6 Bypass", inline: false }
+                            ],
+                            timestamp: new Date().toISOString()
+                        }]
                     })
                 });
-                if(r.ok) status.innerText = "DATA LOGGED.";
+                if(r.ok) status.innerText = "DATA LOGGAD I HQ.";
                 else throw new Error();
             } catch (e) {
-                status.innerText = "UPLOAD FAILED.";
+                status.innerText = "SÄNDNING MISSLYCKADES.";
                 btn.disabled = false;
             }
         }
