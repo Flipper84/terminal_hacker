@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Hacker - Global Breach Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
+        
+        :root {
+            --hacker-green: #00ff41;
+            --hacker-bg: #050505;
+            --hacker-red: #ff003c;
+        }
+
+        body {
+            font-family: 'Source Code Pro', monospace;
+            background-color: var(--hacker-bg);
+            color: var(--hacker-green);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .terminal-window {
+            border: 2px solid var(--hacker-green);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .hidden { display: none !important; }
+
+        .glitch { animation: glitch 1s linear infinite; }
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+
+        .progress-bar-bg { background: #111; border: 1px solid var(--hacker-green); }
+
+        input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--hacker-green);
+            color: var(--hacker-green);
+            outline: none;
+            text-transform: uppercase;
+        }
+
+        /* Justerad storlek för att passa skärmen bättre */
+        .node {
+            width: 38px;
+            height: 38px;
+            border: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.1s;
+        }
+        @media (max-height: 700px) {
+            .node { width: 32px; height: 32px; font-size: 0.7rem; }
+        }
+        .node:hover { background: rgba(0, 255, 65, 0.2); border-color: var(--hacker-green); }
+
+        .btn-hacker {
+            border: 1px solid var(--hacker-green);
+            background: transparent;
+            color: var(--hacker-green);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-hacker:hover {
+            background: var(--hacker-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--hacker-green);
+        }
+
+        .memory-block {
+            width: 60px;
+            height: 60px;
+            border: 1px solid var(--hacker-green);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .memory-block.active { background: var(--hacker-green); color: black; }
+
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 65, 0.1);
+            position: absolute;
+            animation: scan 4s linear infinite;
+            z-index: 50;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+    <div class="crt-overlay"></div>
+
+    <div id="game-container" class="w-full max-w-2xl terminal-window rounded-lg overflow-hidden flex flex-col h-[650px] max-h-[95vh] relative">
+        <div class="scanline"></div>
+        
+        <!-- Header -->
+        <div class="bg-[#111] p-3 border-b border-[#00ff4133] flex justify-between text-[10px] sm:text-xs tracking-widest z-10">
+            <span id="level-display">STATUS: DISCONNECTED</span>
+            <span id="global-timer" class="font-bold text-white">00:00:00</span>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="content" class="flex-grow p-4 sm:p-8 relative overflow-y-auto flex flex-col">
+            
+            <!-- START -->
+            <div id="view-start" class="text-center my-auto">
+                <h1 class="text-4xl sm:text-6xl font-bold mb-4 glitch">GLOBAL BREACH</h1>
+                <div class="text-[10px] mb-8 opacity-60 tracking-[0.3em]">ENCRYPTED_SESSION_ENFORCED</div>
+                <p class="mb-10 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                    Sex säkerhetslager detekterade. Parametrar randomiseras vid varje försök.
+                </p>
+                <button onclick="startBreach()" class="btn-hacker text-lg px-10">INITIERA PROTOKOLL</button>
+            </div>
+
+            <!-- LEVEL 1: SYNC OVERRIDE -->
+            <div id="view-level-1" class="hidden my-auto text-center">
+                <h2 class="text-lg mb-2 text-white">[01] SYNC_OVERRIDE</h2>
+                <p class="mb-8 text-[10px] opacity-70 uppercase tracking-widest">Kalibrera signalen. Träffa zonen 3 gånger.</p>
+                <div class="flex flex-col items-center space-y-10">
+                    <div class="w-full h-10 progress-bar-bg relative overflow-hidden rounded-sm">
+                        <div id="l1-zone" class="absolute h-full bg-green-500 opacity-30" style="left: 70%; width: 12%;"></div>
+                        <div id="l1-marker" class="absolute h-full w-1 bg-white shadow-[0_0_15px_white]" style="left: 0%;"></div>
+                    </div>
+                    <div id="l1-hits" class="text-3xl tracking-[0.5em] font-bold">---</div>
+                    <button onmousedown="checkTiming()" class="btn-hacker w-full max-w-xs py-4 uppercase font-bold">SYNC</button>
+                </div>
+            </div>
+
+            <!-- LEVEL 2: NODE ISOLATION -->
+            <div id="view-level-2" class="hidden my-auto">
+                <h2 class="text-lg mb-2 text-white text-center">[02] NODE_ISOLATION</h2>
+                <p class="mb-4 text-[10px] opacity-70 text-center uppercase tracking-widest">Hitta den unika siffran i matrisen.</p>
+                <div id="node-grid" class="grid grid-cols-10 gap-1 justify-center mx-auto w-fit border border-[#00ff4111] p-1"></div>
+            </div>
+
+            <!-- LEVEL 3: MEMORY LEAK -->
+            <div id="view-level-3" class="hidden my-auto text-center">
+                <h2 class="text-lg mb-2 text-white">[03] MEMORY_LEAK</h2>
+                <p class="mb-6 text-[10px] opacity-70 uppercase tracking-widest">Memorera sekvensen.</p>
+                <div id="memory-grid" class="grid grid-cols-3 gap-4 justify-center mx-auto mb-8 w-fit"></div>
+                <div id="memory-status" class="text-xs italic opacity-50">Väntar...</div>
+            </div>
+
+            <!-- LEVEL 4: CMD INJECTION -->
+            <div id="view-level-4" class="hidden my-auto">
+                <h2 class="text-lg mb-2 text-white text-center">[04] CMD_INJECTION</h2>
+                <p class="mb-6 text-[10px] opacity-70 text-center uppercase tracking-widest">Injicera kodsekvenser.</p>
+                <div class="bg-black p-6 border border-[#00ff4133] mb-6 h-28 flex items-center justify-center">
+                    <span id="target-cmd" class="text-2xl sm:text-3xl text-white tracking-[0.2em] font-bold"></span>
+                </div>
+                <input type="text" id="cmd-input" class="w-full text-center text-2xl p-2" autocomplete="off" autofocus>
+                <div id="cmd-count" class="mt-4 text-center text-[10px] opacity-50 tracking-widest uppercase">Kvar: 5/5</div>
+            </div>
+
+            <!-- LEVEL 5: FREQUENCY MODULATION -->
+            <div id="view-level-5" class="hidden my-auto text-center">
+                <h2 class="text-lg mb-2 text-white">[05] FREQ_MODULATION</h2>
+                <p class="mb-8 text-[10px] opacity-70 uppercase tracking-widest">Tryck när frekvensen blir <span class="text-white font-bold">RÖD</span>.</p>
+                <div class="h-24 flex items-end justify-center space-x-1 sm:space-x-2 mb-10" id="freq-visualizer"></div>
+                <button onmousedown="checkFrequency()" class="btn-hacker w-full max-w-xs py-4 font-bold uppercase">INTERCEPT</button>
+            </div>
+
+            <!-- LEVEL 6: FINAL OVERRIDE -->
+            <div id="view-level-6" class="hidden my-auto text-center">
+                <h2 class="text-lg mb-2 text-white">[06] FINAL_OVERRIDE</h2>
+                <p class="mb-8 text-[10px] opacity-70 uppercase tracking-widest">Slutför logiksekvensen.</p>
+                <div class="text-3xl sm:text-4xl mb-10 tracking-widest text-white font-bold" id="logic-sequence">...</div>
+                <div id="logic-options" class="grid grid-cols-2 gap-4 max-w-xs mx-auto"></div>
+            </div>
+
+            <!-- FINAL SUCCESS -->
+            <div id="view-final" class="hidden text-center my-auto">
+                <div class="mb-4 text-5xl">🔓</div>
+                <h2 class="text-3xl font-bold mb-2 text-white">SYSTEM_COMPROMISED</h2>
+                <p class="opacity-70 mb-8 text-xs">Dataåtkomst beviljad.</p>
+                
+                <div class="inline-block border border-green-500 p-6 rounded bg-black w-full max-w-sm">
+                    <p class="text-[10px] opacity-50 mb-1 uppercase">Total tid</p>
+                    <p id="final-time" class="text-4xl font-bold mb-6 tracking-tighter text-white">00:00:00</p>
+                    
+                    <input type="text" id="player-name" value="Agent84" class="w-full text-center mb-6 p-2 text-lg font-bold border-b border-green-900" placeholder="AGENT_ID">
+                    
+                    <button id="discord-btn" onclick="postToDiscord()" class="btn-hacker w-full py-4 font-bold uppercase">Sänd till HQ</button>
+                    <p id="status-msg" class="mt-4 text-[10px] tracking-widest h-4 uppercase"></p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer / Logs -->
+        <div id="terminal-footer" class="h-24 bg-[#020202] p-3 text-[9px] border-t border-[#00ff4133] overflow-hidden font-mono z-10">
+            <div id="logs" class="opacity-40 leading-tight">
+                > Initializing global breach protocol...<br>
+                > Awaiting authorization...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1489554981324324894/Nr2LuaDGJSLAu6YaQJ81AzR_pdqzxHa6PgnmSDQtKFqXGyk3c00YDX6fAn2klgyBiNtk";
+        
+        let startTime, timerInterval;
+
+        function log(msg) {
+            const logs = document.getElementById('logs');
+            logs.innerHTML += `> ${msg}<br>`;
+            logs.scrollTop = logs.scrollHeight;
+            if(logs.childNodes.length > 15) logs.removeChild(logs.firstChild);
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            const diff = now - startTime;
+            const ms = Math.floor((diff % 1000) / 10).toString().padStart(2, '0');
+            const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+            const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
+            document.getElementById('global-timer').innerText = `${m}:${s}:${ms}`;
+        }
+
+        function showView(id) {
+            const views = ['view-start', 'view-level-1', 'view-level-2', 'view-level-3', 'view-level-4', 'view-level-5', 'view-level-6', 'view-final'];
+            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            // Scroll to top of content
+            document.getElementById('content').scrollTop = 0;
+        }
+
+        function startBreach() {
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 10);
+            log("Lvl 01: SYNC_OVERRIDE detected.");
+            document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_01";
+            initLevel1();
+        }
+
+        // --- LEVEL 1: SYNC OVERRIDE ---
+        let l1MarkerPos = 0, l1Direction = 1, l1Hits = 0, l1Animation;
+        function initLevel1() {
+            showView('view-level-1');
+            l1Hits = 0; l1MarkerPos = 0;
+            document.getElementById('l1-hits').innerText = "---";
+            moveL1();
+        }
+        function moveL1() {
+            const marker = document.getElementById('l1-marker');
+            l1MarkerPos += (2.5 + l1Hits) * l1Direction;
+            if(l1MarkerPos >= 100 || l1MarkerPos <= 0) l1Direction *= -1;
+            marker.style.left = l1MarkerPos + "%";
+            l1Animation = requestAnimationFrame(moveL1);
+        }
+        function checkTiming() {
+            const zone = document.getElementById('l1-zone');
+            const left = parseFloat(zone.style.left), width = parseFloat(zone.style.width);
+            if(l1MarkerPos >= left && l1MarkerPos <= (left + width)) {
+                l1Hits++;
+                log(`Packet sync ${l1Hits}/3`);
+                document.getElementById('l1-hits').innerText = "OK ".repeat(l1Hits) + "- ".repeat(3-l1Hits);
+                zone.style.left = Math.floor(Math.random() * 80) + "%";
+                if(l1Hits >= 3) {
+                    cancelAnimationFrame(l1Animation);
+                    setTimeout(initLevel2, 600);
+                }
+            } else {
+                log("SYNC_ERR: Resetting...");
+                l1Hits = 0;
+                document.getElementById('l1-hits').innerText = "---";
+            }
+        }
+
+        // --- LEVEL 2: NODE ISOLATION ---
+        function initLevel2() {
+            document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_02";
+            showView('view-level-2');
+            const grid = document.getElementById('node-grid');
+            grid.innerHTML = "";
+            const chars = "µ¶§ΔΘΞΠΣΦΨΩ†‡&*%$#@!æøå©®";
+            const targetPos = Math.floor(Math.random() * 100);
+            const targetNum = Math.floor(Math.random() * 9);
+            for(let i=0; i<100; i++) {
+                const n = document.createElement('div');
+                n.className = "node";
+                if(i === targetPos) {
+                    n.innerText = targetNum;
+                    n.onclick = () => { log("Node isolated."); initLevel3(); };
+                } else {
+                    n.innerText = chars[Math.floor(Math.random() * chars.length)];
+                    n.onclick = () => { log("False node. Scrambling..."); initLevel2(); };
+                }
+                grid.appendChild(n);
+            }
+        }
+
+        // --- LEVEL 3: MEMORY LEAK ---
+        let memorySeq = [], playerSeq = [];
+        function initLevel3() {
+            document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_03";
+            showView('view-level-3');
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = "";
+            memorySeq = []; playerSeq = [];
+            for(let i=0; i<9; i++) {
+                const b = document.createElement('div');
+                b.className = "memory-block";
+                b.dataset.id = i;
+                grid.appendChild(b);
+            }
+            startMemoryPattern();
+        }
+        function startMemoryPattern() {
+            document.getElementById('memory-status').innerText = "MEMORERA...";
+            for(let i=0; i<4; i++) memorySeq.push(Math.floor(Math.random()*9));
+            memorySeq.forEach((id, idx) => {
+                setTimeout(() => {
+                    const block = document.querySelector(`[data-id="${id}"]`);
+                    block.classList.add('active');
+                    setTimeout(() => block.classList.remove('active'), 400);
+                }, (idx + 1) * 600);
+            });
+            setTimeout(() => {
+                document.getElementById('memory-status').innerText = "UPPREPA!";
+                document.querySelectorAll('.memory-block').forEach(b => {
+                    b.onclick = () => {
+                        const id = parseInt(b.dataset.id);
+                        b.classList.add('active');
+                        setTimeout(() => b.classList.remove('active'), 200);
+                        playerSeq.push(id);
+                        if(playerSeq[playerSeq.length-1] !== memorySeq[playerSeq.length-1]) {
+                            log("MEMORY_ERR."); initLevel3(); return;
+                        }
+                        if(playerSeq.length === memorySeq.length) {
+                            log("Memory OK."); setTimeout(initLevel4, 500);
+                        }
+                    };
+                });
+            }, (memorySeq.length + 1) * 600);
+        }
+
+        // --- LEVEL 4: CMD INJECTION ---
+        let cmdRem = 5;
+        function initLevel4() {
+            document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_04";
+            showView('view-level-4');
+            cmdRem = 5;
+            document.getElementById('cmd-count').innerText = `BYTES REMAINING: ${cmdRem}/5`;
+            const input = document.getElementById('cmd-input');
+            input.value = ""; input.focus();
+            generateCmd();
+            input.oninput = (e) => {
+                if(e.target.value.toUpperCase() === document.getElementById('target-cmd').innerText) {
+                    cmdRem--;
+                    log(`Buffer cleared. ${cmdRem} left.`);
+                    document.getElementById('cmd-count').innerText = `BYTES REMAINING: ${cmdRem}/5`;
+                    e.target.value = "";
+                    if(cmdRem <= 0) initLevel5(); else generateCmd();
+                }
+            };
+        }
+        function generateCmd() {
+            const segs = ["X99", "AUTH", "ROOT", "DB", "SYS", "SQL", "PORT", "KRNL", "HASH", "USER"];
+            document.getElementById('target-cmd').innerText = segs[Math.floor(Math.random()*segs.length)] + "_" + Math.floor(100+Math.random()*899);
+        }
+
+        // --- LEVEL 5: FREQUENCY MODULATION ---
+        let isRed = false, freqInt;
+        function initLevel5() {
+            document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_05";
+            showView('view-level-5');
+            const viz = document.getElementById('freq-visualizer');
+            viz.innerHTML = "";
+            for(let i=0; i<12; i++) {
+                const bar = document.createElement('div');
+                bar.className = "w-3 sm:w-4 bg-green-900 transition-all duration-100";
+                bar.style.height = "20%";
+                viz.appendChild(bar);
+            }
+            startFreq();
+        }
+        function startFreq() {
+            freqInt = setInterval(() => {
+                isRed = Math.random() > 0.88;
+                const bars = document.querySelectorAll('#freq-visualizer div');
+                bars.forEach(b => {
+                    b.style.height = (20 + Math.random() * 80) + "%";
+                    b.style.backgroundColor = isRed ? "var(--hacker-red)" : "var(--hacker-green)";
+                    b.style.boxShadow = isRed ? "0 0 10px var(--hacker-red)" : "none";
+                });
+            }, 150);
+        }
+        function checkFrequency() {
+            if(isRed) {
+                clearInterval(freqInt);
+                log("Freq match."); initLevel6();
+            } else {
+                log("FREQ_ERR.");
+            }
+        }
+
+        // --- LEVEL 6: FINAL OVERRIDE ---
+        function initLevel6() {
+            document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_06";
+            showView('view-level-6');
+            const seqs = [
+                { s: "2, 4, 8, 16, 32, ?", a: 64 },
+                { s: "1, 2, 4, 7, 11, ?", a: 16 },
+                { s: "3, 6, 5, 10, 9, ?", a: 18 },
+                { s: "10, 9, 7, 4, 0, ?", a: -5 }
+            ];
+            const pick = seqs[Math.floor(Math.random()*seqs.length)];
+            document.getElementById('logic-sequence').innerText = pick.s;
+            const opts = document.getElementById('logic-options');
+            opts.innerHTML = "";
+            const choices = [pick.a, pick.a+2, pick.a-2, pick.a+10].sort(() => Math.random()-0.5);
+            choices.forEach(c => {
+                const b = document.createElement('button');
+                b.className = "btn-hacker text-xl";
+                b.innerText = c;
+                b.onclick = () => {
+                    if(parseInt(b.innerText) === pick.a) { log("Logic OK."); finish(); }
+                    else { log("LOGIC_FAIL."); initLevel6(); }
+                };
+                opts.appendChild(b);
+            });
+        }
+
+        function finish() {
+            clearInterval(timerInterval);
+            document.getElementById('level-display').innerText = "STATUS: COMPROMISED";
+            showView('view-final');
+            document.getElementById('final-time').innerText = document.getElementById('global-timer').innerText;
+            log("BREACH_COMPLETE.");
+        }
+
+        async function postToDiscord() {
+            const name = document.getElementById('player-name').value || "AGENT";
+            const time = document.getElementById('final-time').innerText;
+            const btn = document.getElementById('discord-btn');
+            const status = document.getElementById('status-msg');
+            btn.disabled = true;
+            status.innerText = "UPLOADING...";
+            try {
+                const r = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: "HACKER_HQ",
+                        content: `🚨 **BREACH REPORT** 🚨\nAgent: \`${name}\`\nTime: \`${time}\`\nStatus: \`SUCCESS\``
+                    })
+                });
+                if(r.ok) status.innerText = "DATA LOGGED.";
+                else throw new Error();
+            } catch (e) {
+                status.innerText = "UPLOAD FAILED.";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
