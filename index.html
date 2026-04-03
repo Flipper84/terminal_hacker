@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Terminal Hacker - Global Breach Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -20,6 +20,7 @@
             color: var(--hacker-green);
             overflow: hidden;
             user-select: none;
+            touch-action: manipulation;
         }
 
         .crt-overlay {
@@ -59,18 +60,18 @@
         }
 
         .node {
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             border: 1px solid #1a1a1a;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             transition: all 0.1s;
         }
-        @media (max-height: 700px) {
-            .node { width: 32px; height: 32px; font-size: 0.7rem; }
+        @media (min-width: 640px) {
+            .node { width: 42px; height: 42px; font-size: 0.9rem; }
         }
         .node:hover { background: rgba(0, 255, 65, 0.2); border-color: var(--hacker-green); }
 
@@ -78,25 +79,31 @@
             border: 1px solid var(--hacker-green);
             background: transparent;
             color: var(--hacker-green);
-            padding: 10px 20px;
+            padding: 12px 24px;
             cursor: pointer;
             transition: all 0.3s;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
-        .btn-hacker:hover {
+        .btn-hacker:active, .btn-hacker:hover {
             background: var(--hacker-green);
             color: #000;
             box-shadow: 0 0 20px var(--hacker-green);
         }
 
         .memory-block {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border: 1px solid var(--hacker-green);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+        }
+        @media (max-width: 400px) {
+            .memory-block { width: 60px; height: 60px; }
         }
         .memory-block.active { background: var(--hacker-green); color: black; }
 
@@ -109,12 +116,20 @@
             z-index: 50;
         }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
+
+        /* Mobile specific fixes */
+        #node-grid {
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+        }
+        @media (min-width: 640px) {
+            #node-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
     <div class="crt-overlay"></div>
 
-    <div id="game-container" class="w-full max-w-2xl terminal-window rounded-lg overflow-hidden flex flex-col h-[650px] max-h-[95vh] relative">
+    <div id="game-container" class="w-full max-w-2xl terminal-window rounded-lg overflow-hidden flex flex-col h-[90vh] max-h-[750px] relative">
         <div class="scanline"></div>
         
         <!-- Header -->
@@ -128,12 +143,12 @@
             
             <!-- START -->
             <div id="view-start" class="text-center my-auto">
-                <h1 class="text-4xl sm:text-6xl font-bold mb-4 glitch">GLOBAL BREACH</h1>
-                <div class="text-[10px] mb-8 opacity-60 tracking-[0.3em]">ENCRYPTED_SESSION_ENFORCED</div>
-                <p class="mb-10 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                <h1 class="text-3xl sm:text-6xl font-bold mb-4 glitch">GLOBAL BREACH</h1>
+                <div class="text-[10px] mb-6 opacity-60 tracking-[0.3em]">ENCRYPTED_SESSION_ENFORCED</div>
+                <p class="mb-8 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                     Sex säkerhetslager detekterade. Parametrar randomiseras vid varje försök.
                 </p>
-                <button onclick="startBreach()" class="btn-hacker text-lg px-10">INITIERA PROTOKOLL</button>
+                <button onclick="startBreach()" class="btn-hacker text-lg w-full sm:w-auto">INITIERA PROTOKOLL</button>
             </div>
 
             <!-- LEVEL 1: SYNC OVERRIDE -->
@@ -141,27 +156,27 @@
                 <h2 class="text-lg mb-2 text-white">[01] SYNC_OVERRIDE</h2>
                 <p class="mb-8 text-[10px] opacity-70 uppercase tracking-widest">Kalibrera signalen. Träffa zonen 3 gånger.</p>
                 <div class="flex flex-col items-center space-y-10">
-                    <div class="w-full h-10 progress-bar-bg relative overflow-hidden rounded-sm">
-                        <div id="l1-zone" class="absolute h-full bg-green-500 opacity-30" style="left: 70%; width: 12%;"></div>
-                        <div id="l1-marker" class="absolute h-full w-1 bg-white shadow-[0_0_15px_white]" style="left: 0%;"></div>
+                    <div class="w-full h-12 progress-bar-bg relative overflow-hidden rounded-sm">
+                        <div id="l1-zone" class="absolute h-full bg-green-500 opacity-30" style="left: 70%; width: 15%;"></div>
+                        <div id="l1-marker" class="absolute h-full w-1.5 bg-white shadow-[0_0_15px_white]" style="left: 0%;"></div>
                     </div>
                     <div id="l1-hits" class="text-3xl tracking-[0.5em] font-bold">---</div>
-                    <button onmousedown="checkTiming()" class="btn-hacker w-full max-w-xs py-4 uppercase font-bold">SYNC</button>
+                    <button id="btn-sync" class="btn-hacker w-full max-w-xs py-5">SYNC</button>
                 </div>
             </div>
 
             <!-- LEVEL 2: NODE ISOLATION -->
             <div id="view-level-2" class="hidden my-auto">
                 <h2 class="text-lg mb-2 text-white text-center">[02] NODE_ISOLATION</h2>
-                <p class="mb-4 text-[10px] opacity-70 text-center uppercase tracking-widest">Hitta den unika siffran i matrisen.</p>
-                <div id="node-grid" class="grid grid-cols-10 gap-1 justify-center mx-auto w-fit border border-[#00ff4111] p-1"></div>
+                <p class="mb-4 text-[10px] opacity-70 text-center uppercase tracking-widest">Hitta den unika siffran.</p>
+                <div id="node-grid" class="grid gap-1 justify-center mx-auto w-fit border border-[#00ff4111] p-2"></div>
             </div>
 
             <!-- LEVEL 3: MEMORY LEAK -->
             <div id="view-level-3" class="hidden my-auto text-center">
                 <h2 class="text-lg mb-2 text-white">[03] MEMORY_LEAK</h2>
                 <p class="mb-6 text-[10px] opacity-70 uppercase tracking-widest">Memorera sekvensen.</p>
-                <div id="memory-grid" class="grid grid-cols-3 gap-4 justify-center mx-auto mb-8 w-fit"></div>
+                <div id="memory-grid" class="grid grid-cols-3 gap-3 sm:gap-4 justify-center mx-auto mb-8 w-fit"></div>
                 <div id="memory-status" class="text-xs italic opacity-50">Väntar...</div>
             </div>
 
@@ -169,10 +184,10 @@
             <div id="view-level-4" class="hidden my-auto">
                 <h2 class="text-lg mb-2 text-white text-center">[04] CMD_INJECTION</h2>
                 <p class="mb-6 text-[10px] opacity-70 text-center uppercase tracking-widest">Injicera kodsekvenser.</p>
-                <div class="bg-black p-6 border border-[#00ff4133] mb-6 h-28 flex items-center justify-center">
-                    <span id="target-cmd" class="text-2xl sm:text-3xl text-white tracking-[0.2em] font-bold"></span>
+                <div class="bg-black p-4 sm:p-6 border border-[#00ff4133] mb-6 h-24 sm:h-28 flex items-center justify-center">
+                    <span id="target-cmd" class="text-xl sm:text-3xl text-white tracking-[0.2em] font-bold"></span>
                 </div>
-                <input type="text" id="cmd-input" class="w-full text-center text-2xl p-2" autocomplete="off" autofocus>
+                <input type="text" id="cmd-input" class="w-full text-center text-xl sm:text-2xl p-2" autocomplete="off" inputmode="text" enterkeyhint="done">
                 <div id="cmd-count" class="mt-4 text-center text-[10px] opacity-50 tracking-widest uppercase">Kvar: 5/5</div>
             </div>
 
@@ -180,31 +195,31 @@
             <div id="view-level-5" class="hidden my-auto text-center">
                 <h2 class="text-lg mb-2 text-white">[05] FREQ_MODULATION</h2>
                 <p class="mb-8 text-[10px] opacity-70 uppercase tracking-widest">Tryck när frekvensen blir <span class="text-white font-bold">RÖD</span>.</p>
-                <div class="h-24 flex items-end justify-center space-x-1 sm:space-x-2 mb-10" id="freq-visualizer"></div>
-                <button onmousedown="checkFrequency()" class="btn-hacker w-full max-w-xs py-4 font-bold uppercase">INTERCEPT</button>
+                <div class="h-24 flex items-end justify-center space-x-1.5 sm:space-x-2 mb-10" id="freq-visualizer"></div>
+                <button id="btn-intercept" class="btn-hacker w-full max-w-xs py-5">INTERCEPT</button>
             </div>
 
             <!-- LEVEL 6: FINAL OVERRIDE -->
             <div id="view-level-6" class="hidden my-auto text-center">
                 <h2 class="text-lg mb-2 text-white">[06] FINAL_OVERRIDE</h2>
                 <p class="mb-8 text-[10px] opacity-70 uppercase tracking-widest">Slutför logiksekvensen.</p>
-                <div class="text-3xl sm:text-4xl mb-10 tracking-widest text-white font-bold" id="logic-sequence">...</div>
+                <div class="text-2xl sm:text-4xl mb-10 tracking-widest text-white font-bold" id="logic-sequence">...</div>
                 <div id="logic-options" class="grid grid-cols-2 gap-4 max-w-xs mx-auto"></div>
             </div>
 
             <!-- FINAL SUCCESS -->
             <div id="view-final" class="hidden text-center my-auto">
-                <div class="mb-4 text-5xl">🔓</div>
-                <h2 class="text-3xl font-bold mb-2 text-white">SYSTEM_COMPROMISED</h2>
-                <p class="opacity-70 mb-8 text-xs">Dataåtkomst beviljad.</p>
+                <div class="mb-4 text-4xl sm:text-5xl">🔓</div>
+                <h2 class="text-2xl sm:text-3xl font-bold mb-2 text-white">SYSTEM_COMPROMISED</h2>
+                <p class="opacity-70 mb-6 text-xs">Dataåtkomst beviljad.</p>
                 
-                <div class="inline-block border border-green-500 p-6 rounded bg-black w-full max-w-sm">
+                <div class="inline-block border border-green-500 p-4 sm:p-6 rounded bg-black w-full max-w-sm">
                     <p class="text-[10px] opacity-50 mb-1 uppercase">Total tid</p>
-                    <p id="final-time" class="text-4xl font-bold mb-6 tracking-tighter text-white">00:00:00</p>
+                    <p id="final-time" class="text-3xl sm:text-4xl font-bold mb-6 tracking-tighter text-white">00:00:00</p>
                     
                     <input type="text" id="player-name" value="Agent84" class="w-full text-center mb-6 p-2 text-lg font-bold border-b border-green-900" placeholder="AGENT_ID">
                     
-                    <button id="discord-btn" onclick="postToDiscord()" class="btn-hacker w-full py-4 font-bold uppercase">Sänd till HQ</button>
+                    <button id="discord-btn" onclick="postToDiscord()" class="btn-hacker w-full py-4">Sänd till HQ</button>
                     <p id="status-msg" class="mt-4 text-[10px] tracking-widest h-4 uppercase"></p>
                 </div>
             </div>
@@ -212,7 +227,7 @@
         </div>
 
         <!-- Footer / Logs -->
-        <div id="terminal-footer" class="h-24 bg-[#020202] p-3 text-[9px] border-t border-[#00ff4133] overflow-hidden font-mono z-10">
+        <div id="terminal-footer" class="h-20 sm:h-24 bg-[#020202] p-3 text-[9px] border-t border-[#00ff4133] overflow-hidden font-mono z-10">
             <div id="logs" class="opacity-40 leading-tight">
                 > Initializing global breach protocol...<br>
                 > Awaiting authorization...
@@ -221,7 +236,6 @@
     </div>
 
     <script>
-        // Uppdaterad med din specifika webhook-URL
         const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1489554981324324894/Nr2LuaDGJSLAu6YaQJ81AzR_pdqzxHa6PgnmSDQtKFqXGyk3c00YDX6fAn2klgyBiNtk";
         
         let startTime, timerInterval;
@@ -257,17 +271,24 @@
             initLevel1();
         }
 
+        // Help function for multi-event listeners (Mobile + Desktop)
+        function addGameListener(id, callback) {
+            const el = document.getElementById(id);
+            el.addEventListener('mousedown', (e) => { e.preventDefault(); callback(); });
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); callback(); });
+        }
+
         // --- LEVEL 1: SYNC OVERRIDE ---
         let l1MarkerPos = 0, l1Direction = 1, l1Hits = 0, l1Animation;
         function initLevel1() {
             showView('view-level-1');
             l1Hits = 0; l1MarkerPos = 0;
             document.getElementById('l1-hits').innerText = "---";
+            addGameListener('btn-sync', checkTiming);
             moveL1();
         }
         function moveL1() {
             const marker = document.getElementById('l1-marker');
-            // Justerad hastighet: Ökar med 0.5 för varje träff
             const speed = 0.8 + (l1Hits * 0.5); 
             l1MarkerPos += speed * l1Direction;
             if(l1MarkerPos >= 100 || l1MarkerPos <= 0) l1Direction *= -1;
@@ -300,17 +321,21 @@
             const grid = document.getElementById('node-grid');
             grid.innerHTML = "";
             const chars = "µ¶§ΔΘΞΠΣΦΨΩ†‡&*%$#@!æøå©®";
-            const targetPos = Math.floor(Math.random() * 100);
+            const isMobile = window.innerWidth < 640;
+            const totalNodes = isMobile ? 64 : 100;
+            const targetPos = Math.floor(Math.random() * totalNodes);
             const targetNum = Math.floor(Math.random() * 9);
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<totalNodes; i++) {
                 const n = document.createElement('div');
                 n.className = "node";
                 if(i === targetPos) {
                     n.innerText = targetNum;
-                    n.onclick = () => { log("Node isolated."); initLevel3(); };
+                    n.addEventListener('click', () => { log("Node isolated."); initLevel3(); });
+                    n.addEventListener('touchstart', (e) => { e.preventDefault(); log("Node isolated."); initLevel3(); });
                 } else {
                     n.innerText = chars[Math.floor(Math.random() * chars.length)];
-                    n.onclick = () => { log("False node. Scrambling..."); initLevel2(); };
+                    n.addEventListener('click', () => { log("False node. Scrambling..."); initLevel2(); });
+                    n.addEventListener('touchstart', (e) => { e.preventDefault(); log("False node. Scrambling..."); initLevel2(); });
                 }
                 grid.appendChild(n);
             }
@@ -345,7 +370,7 @@
             setTimeout(() => {
                 document.getElementById('memory-status').innerText = "UPPREPA!";
                 document.querySelectorAll('.memory-block').forEach(b => {
-                    b.onclick = () => {
+                    const handleInput = () => {
                         const id = parseInt(b.dataset.id);
                         b.classList.add('active');
                         setTimeout(() => b.classList.remove('active'), 200);
@@ -357,6 +382,8 @@
                             log("Memory OK."); setTimeout(initLevel4, 500);
                         }
                     };
+                    b.onclick = handleInput;
+                    b.ontouchstart = (e) => { e.preventDefault(); handleInput(); };
                 });
             }, (memorySeq.length + 1) * 600);
         }
@@ -369,7 +396,8 @@
             cmdRem = 5;
             document.getElementById('cmd-count').innerText = `BYTES REMAINING: ${cmdRem}/5`;
             const input = document.getElementById('cmd-input');
-            input.value = ""; input.focus();
+            input.value = ""; 
+            if(window.innerWidth > 640) input.focus();
             generateCmd();
             input.oninput = (e) => {
                 if(e.target.value.toUpperCase() === document.getElementById('target-cmd').innerText) {
@@ -393,12 +421,14 @@
             showView('view-level-5');
             const viz = document.getElementById('freq-visualizer');
             viz.innerHTML = "";
-            for(let i=0; i<12; i++) {
+            const barCount = window.innerWidth < 640 ? 8 : 12;
+            for(let i=0; i<barCount; i++) {
                 const bar = document.createElement('div');
                 bar.className = "w-3 sm:w-4 bg-green-900 transition-all duration-100";
                 bar.style.height = "20%";
                 viz.appendChild(bar);
             }
+            addGameListener('btn-intercept', checkFrequency);
             startFreq();
         }
         function startFreq() {
@@ -440,10 +470,12 @@
                 const b = document.createElement('button');
                 b.className = "btn-hacker text-xl";
                 b.innerText = c;
-                b.onclick = () => {
+                const handleLogic = () => {
                     if(parseInt(b.innerText) === pick.a) { log("Logic OK."); finish(); }
                     else { log("LOGIC_FAIL."); initLevel6(); }
                 };
+                b.onclick = handleLogic;
+                b.ontouchstart = (e) => { e.preventDefault(); handleLogic(); };
                 opts.appendChild(b);
             });
         }
