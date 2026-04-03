@@ -12,6 +12,7 @@
             --hacker-green: #00ff41;
             --hacker-bg: #050505;
             --hacker-red: #ff003c;
+            --hacker-dim: rgba(0, 255, 65, 0.2);
         }
 
         body {
@@ -39,8 +40,6 @@
             background: rgba(0, 0, 0, 0.95);
         }
 
-        .hidden { display: none !important; }
-
         .glitch { animation: glitch 1s linear infinite; }
         @keyframes glitch {
             2%, 64% { transform: translate(2px,0) skew(0deg); }
@@ -60,8 +59,8 @@
         }
 
         .node {
-            width: 32px;
-            height: 32px;
+            width: 35px;
+            height: 35px;
             border: 1px solid #1a1a1a;
             display: flex;
             align-items: center;
@@ -73,7 +72,7 @@
         @media (min-width: 640px) {
             .node { width: 42px; height: 42px; font-size: 0.9rem; }
         }
-        .node:hover { background: rgba(0, 255, 65, 0.2); border-color: var(--hacker-green); }
+        .node:hover { background: var(--hacker-dim); border-color: var(--hacker-green); }
 
         .btn-hacker {
             border: 1px solid var(--hacker-green);
@@ -85,11 +84,20 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.1em;
+            position: relative;
+            overflow: hidden;
         }
         .btn-hacker:active, .btn-hacker:hover {
             background: var(--hacker-green);
             color: #000;
             box-shadow: 0 0 20px var(--hacker-green);
+        }
+        .btn-hacker:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #333;
+            color: #333;
+            box-shadow: none !important;
         }
 
         .memory-block {
@@ -101,6 +109,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            transition: background 0.1s;
         }
         @media (max-width: 400px) {
             .memory-block { width: 60px; height: 60px; }
@@ -114,15 +123,24 @@
             position: absolute;
             animation: scan 4s linear infinite;
             z-index: 50;
+            pointer-events: none;
         }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
 
-        /* Mobile specific fixes */
         #node-grid {
             grid-template-columns: repeat(8, minmax(0, 1fr));
         }
         @media (min-width: 640px) {
             #node-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+        }
+
+        /* Custom Scrollbar */
+        #content::-webkit-scrollbar { width: 4px; }
+        #content::-webkit-scrollbar-track { background: transparent; }
+        #content::-webkit-scrollbar-thumb { background: var(--hacker-green); }
+
+        .input-error {
+            border-bottom-color: var(--hacker-red);
         }
     </style>
 </head>
@@ -141,12 +159,12 @@
         <!-- Main Content Area -->
         <div id="content" class="flex-grow p-4 sm:p-8 relative overflow-y-auto flex flex-col">
             
-            <!-- START -->
+            <!-- START VIEW -->
             <div id="view-start" class="text-center my-auto">
                 <h1 class="text-3xl sm:text-6xl font-bold mb-4 glitch">GLOBAL BREACH</h1>
                 <div class="text-[10px] mb-6 opacity-60 tracking-[0.3em]">ENCRYPTED_SESSION_ENFORCED</div>
                 <p class="mb-8 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
-                    Sex säkerhetslager detekterade. Parametrar randomiseras vid varje försök.
+                    Sex säkerhetslager detekterade. Systemet kräver synkronisering, nod-isolering och logisk dekryptering.
                 </p>
                 <button onclick="startBreach()" class="btn-hacker text-lg w-full sm:w-auto">INITIERA PROTOKOLL</button>
             </div>
@@ -168,7 +186,7 @@
             <!-- LEVEL 2: NODE ISOLATION -->
             <div id="view-level-2" class="hidden my-auto">
                 <h2 class="text-lg mb-2 text-white text-center">[02] NODE_ISOLATION</h2>
-                <p class="mb-4 text-[10px] opacity-70 text-center uppercase tracking-widest">Hitta den unika siffran.</p>
+                <p class="mb-4 text-[10px] opacity-70 text-center uppercase tracking-widest">Identifiera anomalin (hitta siffran).</p>
                 <div id="node-grid" class="grid gap-1 justify-center mx-auto w-fit border border-[#00ff4111] p-2"></div>
             </div>
 
@@ -187,7 +205,7 @@
                 <div class="bg-black p-4 sm:p-6 border border-[#00ff4133] mb-6 h-24 sm:h-28 flex items-center justify-center">
                     <span id="target-cmd" class="text-xl sm:text-3xl text-white tracking-[0.2em] font-bold"></span>
                 </div>
-                <input type="text" id="cmd-input" class="w-full text-center text-xl sm:text-2xl p-2" autocomplete="off" inputmode="text" enterkeyhint="done">
+                <input type="text" id="cmd-input" class="w-full text-center text-xl sm:text-2xl p-2" autocomplete="off" inputmode="text">
                 <div id="cmd-count" class="mt-4 text-center text-[10px] opacity-50 tracking-widest uppercase">Kvar: 5/5</div>
             </div>
 
@@ -217,9 +235,12 @@
                     <p class="text-[10px] opacity-50 mb-1 uppercase">Total tid</p>
                     <p id="final-time" class="text-3xl sm:text-4xl font-bold mb-6 tracking-tighter text-white">00:00:00</p>
                     
-                    <input type="text" id="player-name" value="Agent84" class="w-full text-center mb-6 p-2 text-lg font-bold border-b border-green-900" placeholder="AGENT_ID">
+                    <div class="relative mb-6">
+                        <input type="text" id="player-name" class="w-full text-center p-2 text-lg font-bold border-b border-green-900" placeholder="SKRIV DITT AGENT ID" maxlength="20">
+                        <p id="name-warning" class="text-[9px] text-[#ff003c] mt-1 opacity-0 transition-opacity">AGENT ID KRÄVS FÖR ÖVERFÖRING</p>
+                    </div>
                     
-                    <button id="discord-btn" onclick="postToDiscord()" class="btn-hacker w-full py-4">Sänd till HQ</button>
+                    <button id="discord-btn" onclick="postToDiscord()" class="btn-hacker w-full py-4" disabled>SÄND TILL HQ</button>
                     <p id="status-msg" class="mt-4 text-[10px] tracking-widest h-4 uppercase"></p>
                 </div>
             </div>
@@ -236,6 +257,7 @@
     </div>
 
     <script>
+        // Configuration
         const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1489554981324324894/Nr2LuaDGJSLAu6YaQJ81AzR_pdqzxHa6PgnmSDQtKFqXGyk3c00YDX6fAn2klgyBiNtk";
         
         let startTime, timerInterval;
@@ -244,7 +266,7 @@
             const logs = document.getElementById('logs');
             logs.innerHTML += `> ${msg}<br>`;
             logs.scrollTop = logs.scrollHeight;
-            if(logs.childNodes.length > 15) logs.removeChild(logs.firstChild);
+            if(logs.childNodes.length > 20) logs.removeChild(logs.firstChild);
         }
 
         function updateTimer() {
@@ -271,11 +293,14 @@
             initLevel1();
         }
 
-        // Help function for multi-event listeners (Mobile + Desktop)
-        function addGameListener(id, callback) {
+        function setupButton(id, callback) {
             const el = document.getElementById(id);
-            el.addEventListener('mousedown', (e) => { e.preventDefault(); callback(); });
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); callback(); });
+            const handler = (e) => {
+                e.preventDefault();
+                callback();
+            };
+            el.onmousedown = handler;
+            el.ontouchstart = handler;
         }
 
         // --- LEVEL 1: SYNC OVERRIDE ---
@@ -284,12 +309,12 @@
             showView('view-level-1');
             l1Hits = 0; l1MarkerPos = 0;
             document.getElementById('l1-hits').innerText = "---";
-            addGameListener('btn-sync', checkTiming);
+            setupButton('btn-sync', checkTiming);
             moveL1();
         }
         function moveL1() {
             const marker = document.getElementById('l1-marker');
-            const speed = 0.8 + (l1Hits * 0.5); 
+            const speed = 0.8 + (l1Hits * 0.4); 
             l1MarkerPos += speed * l1Direction;
             if(l1MarkerPos >= 100 || l1MarkerPos <= 0) l1Direction *= -1;
             marker.style.left = l1MarkerPos + "%";
@@ -300,7 +325,7 @@
             const left = parseFloat(zone.style.left), width = parseFloat(zone.style.width);
             if(l1MarkerPos >= left && l1MarkerPos <= (left + width)) {
                 l1Hits++;
-                log(`Packet sync ${l1Hits}/3 - Speed increased`);
+                log(`Packet sync ${l1Hits}/3 - Optimizing velocity`);
                 document.getElementById('l1-hits').innerText = "OK ".repeat(l1Hits) + "- ".repeat(3-l1Hits);
                 zone.style.left = Math.floor(Math.random() * 80) + "%";
                 if(l1Hits >= 3) {
@@ -308,7 +333,7 @@
                     setTimeout(initLevel2, 600);
                 }
             } else {
-                log("SYNC_ERR: Resetting velocity...");
+                log("SYNC_ERR: Signal lost.");
                 l1Hits = 0;
                 document.getElementById('l1-hits').innerText = "---";
             }
@@ -322,21 +347,28 @@
             grid.innerHTML = "";
             const chars = "µ¶§ΔΘΞΠΣΦΨΩ†‡&*%$#@!æøå©®";
             const isMobile = window.innerWidth < 640;
-            const totalNodes = isMobile ? 64 : 100;
+            const totalNodes = isMobile ? 56 : 90;
             const targetPos = Math.floor(Math.random() * totalNodes);
             const targetNum = Math.floor(Math.random() * 9);
+            
             for(let i=0; i<totalNodes; i++) {
                 const n = document.createElement('div');
                 n.className = "node";
-                if(i === targetPos) {
-                    n.innerText = targetNum;
-                    n.addEventListener('click', () => { log("Node isolated."); initLevel3(); });
-                    n.addEventListener('touchstart', (e) => { e.preventDefault(); log("Node isolated."); initLevel3(); });
-                } else {
-                    n.innerText = chars[Math.floor(Math.random() * chars.length)];
-                    n.addEventListener('click', () => { log("False node. Scrambling..."); initLevel2(); });
-                    n.addEventListener('touchstart', (e) => { e.preventDefault(); log("False node. Scrambling..."); initLevel2(); });
-                }
+                const isTarget = i === targetPos;
+                n.innerText = isTarget ? targetNum : chars[Math.floor(Math.random() * chars.length)];
+                
+                const selectNode = (e) => {
+                    e.preventDefault();
+                    if(isTarget) {
+                        log("Node isolated."); 
+                        initLevel3();
+                    } else {
+                        log("False node. Scrambling..."); 
+                        initLevel2();
+                    }
+                };
+                n.onmousedown = selectNode;
+                n.ontouchstart = selectNode;
                 grid.appendChild(n);
             }
         }
@@ -360,30 +392,39 @@
         function startMemoryPattern() {
             document.getElementById('memory-status').innerText = "MEMORERA...";
             for(let i=0; i<4; i++) memorySeq.push(Math.floor(Math.random()*9));
+            
             memorySeq.forEach((id, idx) => {
                 setTimeout(() => {
                     const block = document.querySelector(`[data-id="${id}"]`);
-                    block.classList.add('active');
-                    setTimeout(() => block.classList.remove('active'), 400);
+                    if(block) {
+                        block.classList.add('active');
+                        setTimeout(() => block.classList.remove('active'), 400);
+                    }
                 }, (idx + 1) * 600);
             });
+
             setTimeout(() => {
                 document.getElementById('memory-status').innerText = "UPPREPA!";
                 document.querySelectorAll('.memory-block').forEach(b => {
-                    const handleInput = () => {
+                    const handleInput = (e) => {
+                        e.preventDefault();
                         const id = parseInt(b.dataset.id);
                         b.classList.add('active');
                         setTimeout(() => b.classList.remove('active'), 200);
                         playerSeq.push(id);
+                        
                         if(playerSeq[playerSeq.length-1] !== memorySeq[playerSeq.length-1]) {
-                            log("MEMORY_ERR."); initLevel3(); return;
+                            log("MEMORY_ERR: Sequence corrupted."); 
+                            initLevel3(); 
+                            return;
                         }
                         if(playerSeq.length === memorySeq.length) {
-                            log("Memory OK."); setTimeout(initLevel4, 500);
+                            log("Memory validation successful."); 
+                            setTimeout(initLevel4, 500);
                         }
                     };
-                    b.onclick = handleInput;
-                    b.ontouchstart = (e) => { e.preventDefault(); handleInput(); };
+                    b.onmousedown = handleInput;
+                    b.ontouchstart = handleInput;
                 });
             }, (memorySeq.length + 1) * 600);
         }
@@ -428,7 +469,7 @@
                 bar.style.height = "20%";
                 viz.appendChild(bar);
             }
-            addGameListener('btn-intercept', checkFrequency);
+            setupButton('btn-intercept', checkFrequency);
             startFreq();
         }
         function startFreq() {
@@ -445,9 +486,10 @@
         function checkFrequency() {
             if(isRed) {
                 clearInterval(freqInt);
-                log("Freq match."); initLevel6();
+                log("Frequency intercepted."); 
+                initLevel6();
             } else {
-                log("FREQ_ERR.");
+                log("FREQ_ERR: Bad timing.");
             }
         }
 
@@ -470,12 +512,18 @@
                 const b = document.createElement('button');
                 b.className = "btn-hacker text-xl";
                 b.innerText = c;
-                const handleLogic = () => {
-                    if(parseInt(b.innerText) === pick.a) { log("Logic OK."); finish(); }
-                    else { log("LOGIC_FAIL."); initLevel6(); }
+                const handleLogic = (e) => {
+                    e.preventDefault();
+                    if(parseInt(b.innerText) === pick.a) { 
+                        log("Final logic bridge established."); 
+                        finish(); 
+                    } else { 
+                        log("LOGIC_FAIL: Incorrect parameter."); 
+                        initLevel6(); 
+                    }
                 };
-                b.onclick = handleLogic;
-                b.ontouchstart = (e) => { e.preventDefault(); handleLogic(); };
+                b.onmousedown = handleLogic;
+                b.ontouchstart = handleLogic;
                 opts.appendChild(b);
             });
         }
@@ -485,16 +533,40 @@
             document.getElementById('level-display').innerText = "STATUS: COMPROMISED";
             showView('view-final');
             document.getElementById('final-time').innerText = document.getElementById('global-timer').innerText;
-            log("BREACH_COMPLETE.");
+            log("BREACH_COMPLETE. System is now yours.");
+            
+            // Setup gamertag validation
+            const nameInput = document.getElementById('player-name');
+            const discordBtn = document.getElementById('discord-btn');
+            const warning = document.getElementById('name-warning');
+            
+            nameInput.addEventListener('input', () => {
+                const val = nameInput.value.trim();
+                if (val.length > 0) {
+                    discordBtn.disabled = false;
+                    warning.classList.add('opacity-0');
+                    nameInput.classList.remove('input-error');
+                } else {
+                    discordBtn.disabled = true;
+                    warning.classList.remove('opacity-0');
+                    nameInput.classList.add('input-error');
+                }
+            });
         }
 
         async function postToDiscord() {
-            const name = document.getElementById('player-name').value || "AGENT";
+            const name = document.getElementById('player-name').value.trim();
+            if(!name) return;
+
             const time = document.getElementById('final-time').innerText;
             const btn = document.getElementById('discord-btn');
             const status = document.getElementById('status-msg');
+            const nameInput = document.getElementById('player-name');
+            
             btn.disabled = true;
+            nameInput.disabled = true;
             status.innerText = "SÄNDER RAPPORT...";
+            
             try {
                 const r = await fetch(WEBHOOK_URL, {
                     method: 'POST',
@@ -513,12 +585,22 @@
                         }]
                     })
                 });
-                if(r.ok) status.innerText = "DATA LOGGAD I HQ.";
-                else throw new Error();
+                if(r.ok) {
+                    status.innerText = "DATA LOGGAD I HQ.";
+                    log("Report successfully delivered to HQ.");
+                } else {
+                    throw new Error();
+                }
             } catch (e) {
                 status.innerText = "SÄNDNING MISSLYCKADES.";
                 btn.disabled = false;
+                nameInput.disabled = false;
+                log("NETWORK_ERR: Failed to connect to HQ.");
             }
+        }
+
+        window.onload = () => {
+            log("System ready for breach.");
         }
     </script>
 </body>
