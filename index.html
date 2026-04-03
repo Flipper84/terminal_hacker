@@ -142,6 +142,11 @@
         .input-error {
             border-bottom-color: var(--hacker-red);
         }
+
+        ::placeholder {
+            color: rgba(0, 255, 65, 0.3);
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
@@ -236,7 +241,8 @@
                     <p id="final-time" class="text-3xl sm:text-4xl font-bold mb-6 tracking-tighter text-white">00:00:00</p>
                     
                     <div class="relative mb-6">
-                        <input type="text" id="player-name" class="w-full text-center p-2 text-lg font-bold border-b border-green-900" placeholder="SKRIV DITT AGENT ID" maxlength="20">
+                        <!-- Input set to empty by default -->
+                        <input type="text" id="player-name" class="w-full text-center p-2 text-lg font-bold border-b border-green-900" placeholder="SKRIV DITT AGENT ID HÄR" maxlength="20" value="">
                         <p id="name-warning" class="text-[9px] text-[#ff003c] mt-1 opacity-0 transition-opacity">AGENT ID KRÄVS FÖR ÖVERFÖRING</p>
                     </div>
                     
@@ -257,7 +263,7 @@
     </div>
 
     <script>
-        // Configuration
+        // Webhook URL
         const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1489554981324324894/Nr2LuaDGJSLAu6YaQJ81AzR_pdqzxHa6PgnmSDQtKFqXGyk3c00YDX6fAn2klgyBiNtk";
         
         let startTime, timerInterval;
@@ -303,7 +309,7 @@
             el.ontouchstart = handler;
         }
 
-        // --- LEVEL 1: SYNC OVERRIDE ---
+        // LEVEL 1 Logic
         let l1MarkerPos = 0, l1Direction = 1, l1Hits = 0, l1Animation;
         function initLevel1() {
             showView('view-level-1');
@@ -339,7 +345,7 @@
             }
         }
 
-        // --- LEVEL 2: NODE ISOLATION ---
+        // LEVEL 2 Logic
         function initLevel2() {
             document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_02";
             showView('view-level-2');
@@ -373,7 +379,7 @@
             }
         }
 
-        // --- LEVEL 3: MEMORY LEAK ---
+        // LEVEL 3 Logic
         let memorySeq = [], playerSeq = [];
         function initLevel3() {
             document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_03";
@@ -429,7 +435,7 @@
             }, (memorySeq.length + 1) * 600);
         }
 
-        // --- LEVEL 4: CMD INJECTION ---
+        // LEVEL 4 Logic
         let cmdRem = 5;
         function initLevel4() {
             document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_04";
@@ -455,7 +461,7 @@
             document.getElementById('target-cmd').innerText = segs[Math.floor(Math.random()*segs.length)] + "_" + Math.floor(100+Math.random()*899);
         }
 
-        // --- LEVEL 5: FREQUENCY MODULATION ---
+        // LEVEL 5 Logic
         let isRed = false, freqInt;
         function initLevel5() {
             document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_05";
@@ -493,7 +499,7 @@
             }
         }
 
-        // --- LEVEL 6: FINAL OVERRIDE ---
+        // LEVEL 6 Logic
         function initLevel6() {
             document.getElementById('level-display').innerText = "STATUS: BREACHING_LVL_06";
             showView('view-level-6');
@@ -535,11 +541,15 @@
             document.getElementById('final-time').innerText = document.getElementById('global-timer').innerText;
             log("BREACH_COMPLETE. System is now yours.");
             
-            // Setup gamertag validation
+            // Gamertag validation
             const nameInput = document.getElementById('player-name');
             const discordBtn = document.getElementById('discord-btn');
             const warning = document.getElementById('name-warning');
             
+            // Ensure input is empty and button is disabled at start of final screen
+            nameInput.value = "";
+            discordBtn.disabled = true;
+
             nameInput.addEventListener('input', () => {
                 const val = nameInput.value.trim();
                 if (val.length > 0) {
@@ -555,13 +565,13 @@
         }
 
         async function postToDiscord() {
-            const name = document.getElementById('player-name').value.trim();
+            const nameInput = document.getElementById('player-name');
+            const name = nameInput.value.trim();
             if(!name) return;
 
             const time = document.getElementById('final-time').innerText;
             const btn = document.getElementById('discord-btn');
             const status = document.getElementById('status-msg');
-            const nameInput = document.getElementById('player-name');
             
             btn.disabled = true;
             nameInput.disabled = true;
